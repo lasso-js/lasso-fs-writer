@@ -1,0 +1,62 @@
+{
+  "name": "lasso-fs-writer",
+  "description": "Custom file system writer for lasso.",
+  "version": "1.0.0",
+  "author": "Dylan Piercey <pierceydylan@gmail.com>",
+  "bugs": "https://github.com/lasso-js/lasso-fs-writer/issues",
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "sprom": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/es6-promise": "^0.0.33",
+    "@types/mocha": "^2.2.43",
+    "@types/node": "^8.0.46",
+    "coveralls": "^3.0.0",
+    "husky": "^0.14.3",
+    "lasso2": "git://github.com/lasso-js/lasso.git#v2.11.21",
+    "lasso3": "git://github.com/lasso-js/lasso.git",
+    "lint-staged": "^5.0.0",
+    "memory-fs": "^0.4.1",
+    "mocha": "^4.0.1",
+    "nyc": "^11.3.0",
+    "prettier": "^1.7.4",
+    "ts-node": "^3.3.0",
+    "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.6.0",
+    "typescript": "^2.5.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/lasso-js/lasso-fs-writer",
+  "keywords": [
+    "file",
+    "lasso",
+    "memory",
+    "system"
+  ],
+  "license": "MIT",
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "tslint -t codeFrame -c tslint.json",
+      "git add"
+    ]
+  },
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lasso-js/lasso-fs-writer"
+  },
+  "scripts": {
+    "build": "tsc",
+    "coveralls": "cat coverage/lcov.info | coveralls",
+    "format-all": "find {src,test} -name '*.ts' | xargs prettier --write",
+    "mocha": "mocha -r ts-node/register ./test/**/*.test.ts",
+    "precommit": "lint-staged && npm test && npm run build",
+    "test": "nyc --extension=.ts --include=src/**/*.ts --reporter=lcov --reporter=text-summary npm run mocha",
+    "test-ci": "nyc --extension=.ts --include=src/**/*.ts --reporter=lcovonly --reporter=text npm run mocha"
+  },
+  "types": "dist/index.d.ts"
+}
