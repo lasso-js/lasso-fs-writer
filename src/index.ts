@@ -1,12 +1,10 @@
 module.exports = exports = plugin;
 import { ok } from "assert";
-import * as _mkdirp from "mkdirp";
-import { basename, join, parse, extname } from "path";
+import * as mkdirp from "mkdirp";
+import * as path from "path";
 import * as sprom from "sprom";
-import { resolve } from "url";
-import { promisify } from "util";
+import * as url from "url";
 export default plugin;
-const mkdir = promisify(_mkdirp);
 
 /**
  * A lasso plugin which accepts a file system and writes to it instead of the default fs.
@@ -26,8 +24,8 @@ function plugin(lasso, config) {
       try {
         const { bundle } = ctx;
         const filename = getRelativeBundlePath(projectRoot, ctx);
-        const outputFile = join(outputDir, filename);
-        const outputURL = resolve(urlPrefix + "/", filename);
+        const outputFile = path.join(outputDir, filename);
+        const outputURL = url.resolve(urlPrefix + "/", filename);
 
         await writeStream(fs, outputFile, reader.readBundle());
         bundle.setWritten(true);
@@ -52,8 +50,8 @@ function plugin(lasso, config) {
     async writeResource(reader, ctx, done) {
       try {
         const filename = getRelativeResourcePath(projectRoot, ctx);
-        const outputFile = join(outputDir, filename);
-        const outputURL = resolve(urlPrefix + "/", filename);
+        const outputFile = path.join(outputDir, filename);
+        const outputURL = url.resolve(urlPrefix + "/", filename);
         const result = { outputFile, url: outputURL };
         await writeStream(fs, outputFile, reader.readResource());
 
@@ -85,11 +83,11 @@ function getUrl(original) {
 /**
  * Extracts and normalizes the relative path for a lasso bundle.
  */
-function getRelativeBundlePath (dir, { bundle }) {
+function getRelativeBundlePath(dir, { bundle }) {
   if (bundle.relativeOutputPath) {
-    const relativePath = bundle.relativeOutputPath.split('//').pop();
-    const ext = extname(relativePath);
-    return ext ? relativePath : `${relativePath}.${bundle.contentType}`
+    const relativePath = bundle.relativeOutputPath.split("//").pop();
+    const ext = path.extname(relativePath);
+    return ext ? relativePath : `${relativePath}.${bundle.contentType}`;
   } else {
     return `${bundle.name}.${bundle.contentType}`;
   }
@@ -98,14 +96,29 @@ function getRelativeBundlePath (dir, { bundle }) {
 /**
  * Extracts and normalizes the relative path for a lasso resource.
  */
-function getRelativeResourcePath (dir, ctx) {
+function getRelativeResourcePath(dir, ctx) {
   return ctx.path.replace(dir, ".");
 }
 
 /**
  * Writes a stream to the provided path at with the provided fs and makes sure the directory exists.
  */
-async function writeStream (fs, outputFile, stream) {
-  await mkdir(parse(outputFile).dir, { fs });
-  await promisify(fs.writeFile.bind(fs))(outputFile, await sprom.buf(stream));
+function writeStream(fs, outputFile, stream) {
+  return new Promise((resolve, reject) => {
+    mkdirp(path.parse(outputFile).dir, { fs }, err1 => {
+      if (err1) {
+        return reject(err1);
+      }
+
+      sprom.buf(stream).then(data => {
+        fs.writeFile(outputFile, data, err2 => {
+          if (err2) {
+            return reject(err2);
+          }
+
+          resolve();
+        });
+      }, reject);
+    });
+  });
 }
